@@ -1,12 +1,16 @@
 const STATUS_COLUMN_INDEX = 11; // Excel L sütunu: A=0, L=11
 const STORAGE_KEY = "assessor_list_imported_rows_v1";
 const STORAGE_HEADERS_KEY = "assessor_list_headers_v1";
+const SEARCH_DEBOUNCE_MS = 350;
+
+let searchDebounceTimer = null;
 
 const state = {
   headers: [],
   rows: [],
   filter: "ALL",
-  search: ""
+  search: "",
+  searchCache: []
 };
 
 const el = {
@@ -60,12 +64,19 @@ function attachEvents() {
   });
 
   el.searchInput.addEventListener("input", event => {
-    state.search = normalizeText(event.target.value);
-    renderTable();
+    const value = event.target.value;
+
+    window.clearTimeout(searchDebounceTimer);
+    searchDebounceTimer = window.setTimeout(() => {
+      state.search = normalizeText(value);
+      renderTable();
+    }, SEARCH_DEBOUNCE_MS);
   });
 
   el.filterButtons.forEach(button => {
     button.addEventListener("click", () => {
+      window.clearTimeout(searchDebounceTimer);
+      state.search = normalizeText(el.searchInput.value);
       state.filter = button.dataset.filter;
       el.filterButtons.forEach(btn => btn.classList.remove("active"));
       button.classList.add("active");
@@ -76,8 +87,10 @@ function attachEvents() {
   el.clearBtn.addEventListener("click", () => {
     state.headers = [];
     state.rows = [];
+    state.searchCache = [];
     state.filter = "ALL";
     state.search = "";
+    window.clearTimeout(searchDebounceTimer);
     el.searchInput.value = "";
     el.fileName.textContent = "Liste temizlendi. Yeni Excel dosyası import edebilirsiniz.";
     localStorage.removeItem(STORAGE_KEY);
@@ -121,8 +134,10 @@ async function importFile(file) {
 
     state.headers = headers;
     state.rows = rows;
+    rebuildSearchCache();
     state.filter = "ALL";
     state.search = "";
+    window.clearTimeout(searchDebounceTimer);
     el.searchInput.value = "";
     resetFilterButtons();
 
@@ -170,6 +185,10 @@ function normalizeText(value) {
     .trim();
 }
 
+function rebuildSearchCache() {
+  state.searchCache = state.rows.map(row => normalizeText(row.join(" ")));
+}
+
 function persistData() {
   try {
     localStorage.setItem(STORAGE_HEADERS_KEY, JSON.stringify(state.headers));
@@ -187,6 +206,7 @@ function loadStoredData() {
     if (Array.isArray(headers) && Array.isArray(rows) && headers.length && rows.length) {
       state.headers = headers;
       state.rows = rows;
+      rebuildSearchCache();
       el.fileName.textContent = `Tarayıcıda kayıtlı son liste yüklendi. Kayıt sayısı: ${rows.length}`;
     }
   } catch (error) {
@@ -280,10 +300,10 @@ function renderTable() {
 }
 
 function getFilteredRows() {
-  return state.rows.filter(row => {
+  return state.rows.filter((row, index) => {
     const status = normalizeStatus(row[STATUS_COLUMN_INDEX]);
     const statusMatch = state.filter === "ALL" || status === state.filter;
-    const searchMatch = !state.search || normalizeText(row.join(" ")).includes(state.search);
+    const searchMatch = !state.search || (state.searchCache[index] || "").includes(state.search);
     return statusMatch && searchMatch;
   });
 }
