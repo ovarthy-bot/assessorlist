@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Değerlendirici Listesi</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">Excel Import Uygulaması</p>
+        <h1>Değerlendirici Listesi</h1>
+        <p class="subtitle">Excel dosyasını import edin. L sütunundaki durum bilgisine göre kayıtlar otomatik renklendirilir.</p>
+      </div>
+      <div class="status-legend" aria-label="Durum renk açıklaması">
+        <span class="legend-item"><i class="dot active"></i>ACTIVE</span>
+        <span class="legend-item"><i class="dot cancel"></i>CANCEL</span>
+        <span class="legend-item"><i class="dot suspend"></i>SUSPEND</span>
+      </div>
+    </header>
+
+    <section class="panel import-panel">
+      <label id="dropZone" class="drop-zone" for="fileInput">
+        <input id="fileInput" type="file" accept=".xlsx,.xls,.csv" />
+        <span class="upload-icon">⇪</span>
+        <strong>Excel dosyasını seçin veya buraya sürükleyin</strong>
+        <small>Desteklenen format: .xlsx, .xls, .csv</small>
+      </label>
+      <div class="import-info">
+        <p id="fileName">Henüz dosya import edilmedi.</p>
+        <p class="hint">Beklenen durum alanı: <strong>L sütunu</strong> / “Ehliyetin Geçerliliği - Active”</p>
+      </div>
+    </section>
+
+    <section class="stats-grid" aria-label="Özet bilgiler">
+      <article class="stat-card total"><span>Toplam</span><strong id="totalCount">0</strong></article>
+      <article class="stat-card active"><span>Active</span><strong id="activeCount">0</strong></article>
+      <article class="stat-card cancel"><span>Cancel</span><strong id="cancelCount">0</strong></article>
+      <article class="stat-card suspend"><span>Suspend</span><strong id="suspendCount">0</strong></article>
+    </section>
+
+    <section class="panel toolbar">
+      <div class="search-wrap">
+        <input id="searchInput" type="search" placeholder="Listede ara: sicil, ad soyad, müdürlük, rating..." />
+      </div>
+      <div class="filter-group" aria-label="Durum filtresi">
+        <button class="filter-btn active" data-filter="ALL">Tümü</button>
+        <button class="filter-btn" data-filter="ACTIVE">Active</button>
+        <button class="filter-btn" data-filter="CANCEL">Cancel</button>
+        <button class="filter-btn" data-filter="SUSPEND">Suspend</button>
+      </div>
+      <button id="clearBtn" class="ghost-btn" type="button">Listeyi temizle</button>
+    </section>
+
+    <main class="panel table-panel">
+      <div id="emptyState" class="empty-state">
+        <h2>Liste boş</h2>
+        <p>Başlamak için değerlendirici Excel dosyasını import edin.</p>
+      </div>
+      <div id="tableWrap" class="table-wrap hidden">
+        <table id="assessorTable">
+          <thead id="tableHead"></thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
